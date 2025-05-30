@@ -17,14 +17,16 @@ This repository contains a complete pipeline for predicting the receptor-binding
 
 ##  Pipeline Components
 
-### 1. **Data Preparation**
+### 1. **Data Preparation** (can be skipped)
 - Input: `H3_aligned.fasta`
 - Split into batches of 500 sequences per file
+- code `split3.py`
 
 ### 2. **ESM-2 Embedding Generation**
 - Generate per-sequence embeddings using `esm2_t33_650M_UR50D`
 - Embedding shape: `(L, 1280)` where L = sequence length
 - Reshape global embeddings into voxel format `(1, 10, 8, 16)` for 3D CNN
+- code `generate_esm2_embedding.py`. Input path can be changed. 
 
 ### 3. **Structural Feature Extraction**
 - Source: PDB structures `4O5N`, `7KOA`, `6AOV`
@@ -32,6 +34,7 @@ This repository contains a complete pipeline for predicting the receptor-binding
   - RSA (Relative Solvent Accessibility)
   - Euclidean distance between mutation sites
 - Aggregated into average structural matrices for each residue position
+- code `download_h3pdb.py`
 
 ### 4. **Binding Score Labeling**
 - Rule-based scoring using:
@@ -44,9 +47,12 @@ This repository contains a complete pipeline for predicting the receptor-binding
   - `2`: score > 10.0
 
 ### 5. **Host Metadata Integration**
-- Source: `H3_metadata.csv`
+- Source: `H3_metadata.csv` (Use `match_v2.py` to ensure all sequences are matched)
 - Label: `host_label = 0` (human), `1` (non-human)
 - Merged into final dataset `H3_mutation_table_labeled_with_host.csv`
+- prepare balanced dataset `prepare_balanced_training_data_v3.py`
+
+-code for step 4 and step 5:  `H3_mutation_table.py`, `extract_structural_features_h3_v2.py`, `add_binding_score_v9.py`, `add_host_label.py`
 
 ### 6. **Dataset Construction**
 - Inputs:
@@ -58,9 +64,13 @@ This repository contains a complete pipeline for predicting the receptor-binding
   - `y.npy` → labels
   - `voxel.npy` → voxel inputs
 
+-code `split3id.py`, `builddata.py`. (Ensue data matched and build dataset)
+
 ---
 
-##  Model Architecture
+
+
+##  Model Architecture: `train_3dcnn_v3_balanced.py` and `multiseed.py`
 
 **Hybrid 3D CNN**:
 - 3D Convolution over voxel input
